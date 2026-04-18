@@ -144,10 +144,6 @@ alias infr="infisical run"
 alias infs="infisical secrets"
 alias infp="infisical export"
 
-# takopi (Telegram AI agent bridge)
-alias tk="takopi"
-alias tks="takopi --status"
-
 # Dotfiles dashboard and management
 alias dash="~/.local/share/chezmoi/scripts/utils/dashboard.sh"
 alias dashw="~/.local/share/chezmoi/scripts/utils/dashboard.sh --watch"

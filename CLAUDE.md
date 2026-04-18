@@ -46,7 +46,7 @@ make lazy-load-stats      # Show lazy loading stats
 # Services: tailscale, onepassword, aws, infisical, orbstack
 # macOS:    paperwm, raycast, llvm, postgres, psql
 # Web3:     foundry, huff, solana
-# Apps:     takopi, work, personal
+# Apps:     work, personal
 # Theme:    [data.theme] -- full Synthwave84 palette (bg, fg, accent, ANSI colors)
 ```
 
@@ -67,7 +67,6 @@ Encrypted files:
 
 - `home/dot_ssh/encrypted_config.tmpl` -- SSH config with Tailscale hosts, 1Password SSH agent on macOS
 - `home/dot_zsh/core/encrypted_secrets.zsh` -- 1Password/AWS/Infisical integration
-- `home/dot_takopi/encrypted_takopi.toml` -- takopi bot config
 
 ## Modular Zsh Architecture
 

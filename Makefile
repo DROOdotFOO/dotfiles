@@ -1,4 +1,4 @@
-.PHONY: help install update diff status backup clean doctor bootstrap sync sync-from-remote backup-full install-optional generate-template setup-age age-retrieve age-status setup-mise mise-status mise-upgrade mise-doctor setup-raycast raycast-export raycast-import raycast-status setup-takopi takopi-onboard takopi-backup takopi-status setup-signoz-mcp signoz-mcp-status signoz-mcp-update lint perf perf-report skills-status
+.PHONY: help install update diff status backup clean doctor bootstrap sync sync-from-remote backup-full install-optional generate-template setup-age age-retrieve age-status setup-mise mise-status mise-upgrade mise-doctor setup-raycast raycast-export raycast-import raycast-status setup-signoz-mcp signoz-mcp-status signoz-mcp-update lint perf perf-report skills-status
 
 # Configuration
 DOTFILES_ROOT := $(shell pwd)
@@ -177,19 +177,6 @@ raycast-import: ## Import Raycast settings from dotfiles
 
 raycast-status: ## Show Raycast status
 	@$(SCRIPTS_DIR)/setup/setup-raycast.sh status
-
-# takopi (Telegram AI agent bridge)
-setup-takopi: ## Install takopi via uv
-	@$(SCRIPTS_DIR)/setup/setup-takopi.sh install
-
-takopi-onboard: ## Run takopi interactive onboarding
-	@$(SCRIPTS_DIR)/setup/setup-takopi.sh onboard
-
-takopi-backup: ## Encrypt takopi config to chezmoi source
-	@$(SCRIPTS_DIR)/setup/setup-takopi.sh config-backup
-
-takopi-status: ## Show takopi status
-	@$(SCRIPTS_DIR)/setup/setup-takopi.sh status
 
 # SigNoz MCP server
 setup-signoz-mcp: ## Build and install SigNoz MCP server from source

@@ -37,7 +37,6 @@ aws = true
 infisical = true
 paperwm = true
 raycast = true
-takopi = true
 work = false
 datadog = true
 sentry = false

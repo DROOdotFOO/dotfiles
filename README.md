@@ -33,7 +33,7 @@ brew install chezmoi && chezmoi init --apply https://github.com/DROOdotFOO/dotfi
 | **System**    | btop, fastfetch, tldr (`help`)                               |
 | **Windows**   | Hammerspoon + PaperWM (macOS)                                |
 | **Launcher**  | Raycast (macOS)                                              |
-| **AI**        | Claude Code (47 skills, MCP companions, MCP servers), takopi |
+| **AI**        | Claude Code (53 skills, 8 agents, 31 MCP tools)             |
 | **Secrets**   | 1Password (SSH agent + age encryption), AWS CLI, Infisical   |
 | **Network**   | Tailscale with pre-configured hosts                          |
 | **Languages** | Elixir, Rust, Go, Python, Node.js, Lua (via mise)            |
@@ -137,7 +137,7 @@ No plaintext secrets on disk. SSH keys and the age decryption key live in 1Passw
 
 **SSH**: 1Password's SSH agent handles keys on macOS. No `~/.ssh/id_*` files needed. Enable it in 1Password under Settings > Developer > "Use the SSH Agent".
 
-**Age encryption**: Encrypted files (SSH config, shell secrets, takopi config) are decrypted via a wrapper script that pulls the key from 1Password at runtime. On machines without 1Password, chezmoi falls back to `~/.config/chezmoi/age_key.txt`.
+**Age encryption**: Encrypted files (SSH config, shell secrets) are decrypted via a wrapper script that pulls the key from 1Password at runtime. On machines without 1Password, chezmoi falls back to `~/.config/chezmoi/age_key.txt`.
 
 ## Configuration
 
@@ -148,7 +148,6 @@ Toggle features in `~/.config/chezmoi/chezmoi.toml`:
 starship = true
 paperwm = true
 raycast = true
-takopi = true
 tailscale = true
 onepassword = true
 aws = true
@@ -186,7 +185,6 @@ dotfiles/
 │   │   ├── solidity-audit/           # Solidity dev + security auditing
 │   │   ├── ethskills/                # Ethereum tooling + EIP/ERC reference
 │   │   └── raxol/                    # Raxol TUI/agent framework
-│   ├── dot_takopi/                     # takopi config (encrypted)
 │   └── private_dot_claude/             # Claude Code config + hooks
 ├── config/
 │   ├── raycast/                        # Raycast settings
