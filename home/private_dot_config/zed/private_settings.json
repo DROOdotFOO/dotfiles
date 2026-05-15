@@ -1,4 +1,12 @@
 {
+  "agent": {
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "git_panel": {
+    "dock": "right"
+  },
   "auto_install_extensions": {
     "zoir": true
   },
