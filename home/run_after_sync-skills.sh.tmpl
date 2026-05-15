@@ -1,6 +1,7 @@
 #!/bin/bash
-# Skills config hash: {{ include ".chezmoiexternal.toml" | sha256sum }}
 # Sync skills: ~/.agents/skills/* -> ~/.claude/skills/* (symlinks)
+# Runs on every apply (script is idempotent; previous run_onchange_ trigger keyed
+# off .chezmoiexternal.toml hash and missed external content refreshes).
 
 set -euo pipefail
 

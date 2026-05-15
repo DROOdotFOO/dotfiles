@@ -8,6 +8,54 @@
       "type": "http",
       "url": "https://mcp.blockscout.com/mcp"
     }
+{{- if .coingecko }},
+    "coingecko": {
+      "type": "http",
+      "url": "https://mcp.api.coingecko.com/mcp"
+    }
+{{- end }}
+{{- if .digest }},
+    "digest": {
+      "command": "digest",
+      "args": ["serve"]
+    }
+{{- end }}
+{{- if .recall }},
+    "recall": {
+      "command": "recall",
+      "args": ["serve"]
+    }
+{{- end }}
+{{- if .autoresearch }},
+    "autoresearch": {
+      "command": "autoresearch",
+      "args": ["serve"]
+    }
+{{- end }}
+{{- if .watchdog }},
+    "watchdog": {
+      "command": "watchdog",
+      "args": ["serve"]
+    }
+{{- end }}
+{{- if .prepper }},
+    "prepper": {
+      "command": "prepper",
+      "args": ["serve"]
+    }
+{{- end }}
+{{- if .sentinel }},
+    "sentinel": {
+      "command": "sentinel",
+      "args": ["serve"]
+    }
+{{- end }}
+{{- if .patchbot }},
+    "patchbot": {
+      "command": "patchbot",
+      "args": ["serve"]
+    }
+{{- end }}
 {{- if .datadog }},
     "datadog": {
       "type": "http",

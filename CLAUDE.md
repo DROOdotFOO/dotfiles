@@ -47,6 +47,7 @@ make lazy-load-stats      # Show lazy loading stats
 # macOS:    paperwm, raycast, llvm, postgres, psql
 # Web3:     foundry, huff, solana
 # Apps:     work, personal
+# MCP:      datadog, sentry, signoz, coingecko, digest, recall, autoresearch, watchdog, prepper, sentinel, patchbot
 # Theme:    [data.theme] -- full Synthwave84 palette (bg, fg, accent, ANSI colors)
 ```
 
@@ -59,7 +60,7 @@ Use in templates: `{{- if .rust -}}...{{- end -}}`. Use `{{- -}}` to trim whites
 - `run_onchange_after_brew-bundle.sh.tmpl` -- runs `brew bundle install` when Brewfile hash changes
 - `run_onchange_after_mise-install.sh.tmpl` -- runs `mise install` when mise config changes
 - `run_onchange_after_reload-hammerspoon.sh.tmpl` -- reloads Hammerspoon on config change (macOS)
-- `run_onchange_after_sync-skills.sh.tmpl` -- symlinks skills from `~/.agents/skills/` to `~/.claude/skills/`
+- `run_after_sync-skills.sh.tmpl` -- symlinks skills from `~/.agents/skills/` to `~/.claude/skills/` (always runs; script is idempotent)
 
 **Age encryption**: Sensitive files use `encrypted_` prefix. Decryption key is stored in 1Password (secure note "AGE-SECRET-KEY" in Employee vault) and accessed via `~/.config/chezmoi/age-op-decrypt.sh` wrapper -- no plaintext key on disk. To edit encrypted templates, decrypt with `age -d -i <(op read "op://Employee/AGE-SECRET-KEY/notesPlain" | grep "^AGE-SECRET-KEY-")`, edit, re-encrypt with `age -r "<recipient>"`, verify with `chezmoi diff`. `chezmoi re-add` does NOT work for encrypted files.
 
@@ -142,13 +143,23 @@ Local skills (`ethskills/`, `solidity-audit/`, `noir/`) provide offline Ethereum
 
 Managed via `~/.mcp.json` (chezmoi template: `home/dot_mcp.json.tmpl`). Toggle in `chezmoi.toml`, then `chezmoi apply`.
 
-| Server     | Flag      | Transport  | Notes                             |
-| ---------- | --------- | ---------- | --------------------------------- |
-| context7   | always on | stdio      | Library docs via npx              |
-| blockscout | always on | http       | Blockchain data queries           |
-| datadog    | `datadog` | http/OAuth | us5.datadoghq.com, no secrets     |
-| sentry     | `sentry`  | http/OAuth | mcp.sentry.dev, no secrets        |
-| signoz     | `signoz`  | stdio      | API key from 1Password at runtime |
+| Server       | Flag             | Transport  | Notes                             |
+| ------------ | ---------------- | ---------- | --------------------------------- |
+| context7     | always on        | stdio      | Library docs via npx              |
+| blockscout   | always on        | http       | Blockchain data queries           |
+| coingecko    | `coingecko`      | http       | Crypto market data                |
+| digest       | `digest`         | stdio      | Multi-platform activity digest    |
+| recall       | `recall`         | stdio      | Knowledge capture/retrieval (FTS5) |
+| autoresearch | `autoresearch`   | stdio      | Autonomous experiment runner      |
+| watchdog     | `watchdog`       | stdio      | Repo health monitor               |
+| prepper      | `prepper`        | stdio      | Pre-session context builder       |
+| sentinel     | `sentinel`       | stdio      | On-chain contract monitor         |
+| patchbot     | `patchbot`       | stdio      | Polyglot dependency updater       |
+| datadog      | `datadog`        | http/OAuth | us5.datadoghq.com, no secrets     |
+| sentry       | `sentry`         | http/OAuth | mcp.sentry.dev, no secrets        |
+| signoz       | `signoz`         | stdio      | API key from 1Password at runtime |
+
+Agent MCP servers (coingecko through patchbot) all share the same `<binary> serve` invocation pattern — they're CLIs from [agent-skills](https://github.com/DROOdotFOO/agent-skills) that double as MCP stdio servers.
 
 **Datadog:** Enable `datadog = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
 
@@ -162,7 +173,7 @@ Managed via `~/.mcp.json` (chezmoi template: `home/dot_mcp.json.tmpl`). Toggle i
 
 ## Claude Code Skills
 
-Skills are sourced from [DROOdotFOO/agent-skills](https://github.com/DROOdotFOO/agent-skills) and pulled via `home/.chezmoiexternal.toml` on `chezmoi apply`. Deployed to `~/.agents/skills/` and symlinked to `~/.claude/skills/` by `run_onchange_after_sync-skills.sh.tmpl`.
+Skills are sourced from [DROOdotFOO/agent-skills](https://github.com/DROOdotFOO/agent-skills) and pulled via `home/.chezmoiexternal.toml` on `chezmoi apply` (refresh window 168h; force with `--refresh-externals`). Deployed to `~/.agents/skills/` and symlinked to `~/.claude/skills/` by `run_after_sync-skills.sh.tmpl`.
 
 **Code pattern skills** -- language-specific examples and idioms:
 
