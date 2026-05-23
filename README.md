@@ -182,7 +182,7 @@ dotfiles/
 │   │   ├── claude-api/                # Anthropic SDK reference
 │   │   ├── droo-stack/               # Polyglot patterns (Elixir/TS/Go/Rust/Py/Lua/Noir/Shell)
 │   │   ├── noir/                     # ZK circuits, Aztec contracts/security/e2e testing
-│   │   ├── solidity-audit/           # Solidity dev + security auditing
+│   │   ├── solidity-auditor/           # Solidity dev + security auditing
 │   │   ├── ethskills/                # Ethereum tooling + EIP/ERC reference
 │   │   └── raxol/                    # Raxol TUI/agent framework
 │   └── private_dot_claude/             # Claude Code config + hooks

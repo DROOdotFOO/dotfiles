@@ -127,7 +127,7 @@ Single source of truth: `[data.theme]` in `chezmoi.toml` (Synthwave84 palette). 
 
 ## ETHSkills & Web3 Context
 
-Local skills (`ethskills/`, `solidity-audit/`, `noir/`) provide offline Ethereum, Solidity, and ZK knowledge. For supplemental or latest info, fetch from [ETHSkills](https://ethskills.com/) live sources (URLs listed in `solidity-audit/live-sources.md`).
+Local skills (`ethskills/`, `solidity-auditor/`, `noir/`) provide offline Ethereum, Solidity, and ZK knowledge. For supplemental or latest info, fetch from [ETHSkills](https://ethskills.com/) live sources (URLs listed in `solidity-auditor/live-sources.md`).
 
 | Live Skill | URL                                | Use Case                                    |
 | ---------- | ---------------------------------- | ------------------------------------------- |
@@ -191,7 +191,7 @@ Skills are sourced from [DROOdotFOO/agent-skills](https://github.com/DROOdotFOO/
 | Skill          | Triggers on                                                                |
 | -------------- | -------------------------------------------------------------------------- |
 | ethskills      | Ethereum tooling, EIP/ERC standards, framework selection                   |
-| solidity-audit | `.sol` files, foundry.toml, auditing, security review                      |
+| solidity-auditor | `.sol` files, foundry.toml, auditing, security review                      |
 | noir           | `.nr` files, Nargo.toml, ZK circuits, Aztec contracts/security/e2e testing |
 | blockscout     | On-chain data queries, contract state, token balances, ENS, NFT holdings   |
 | coingecko      | Token prices, market caps, DEX pools, trending tokens, price history       |
