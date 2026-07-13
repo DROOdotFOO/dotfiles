@@ -38,9 +38,9 @@ infisical = true
 paperwm = true
 raycast = true
 work = false
-datadog = true
+datadog = false
 sentry = false
-signoz = false
+signoz = true
 
 # MCP/Observability
 datadog_site = "us5.datadoghq.com"

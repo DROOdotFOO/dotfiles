@@ -56,6 +56,12 @@
       "args": ["serve"]
     }
 {{- end }}
+{{- if .signoz }},
+    "signoz": {
+      "command": "{{ .chezmoi.homeDir }}/.local/bin/signoz-mcp-wrapper.sh",
+      "args": []
+    }
+{{- end }}
 {{- if .datadog }},
     "datadog": {
       "type": "http",
@@ -66,12 +72,6 @@
     "sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/sse"
-    }
-{{- end }}
-{{- if .signoz }},
-    "signoz": {
-      "command": "{{ .chezmoi.homeDir }}/.local/bin/signoz-mcp-wrapper.sh",
-      "args": []
     }
 {{- end }}
   }

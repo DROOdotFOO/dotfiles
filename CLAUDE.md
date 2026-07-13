@@ -155,21 +155,21 @@ Managed via `~/.mcp.json` (chezmoi template: `home/dot_mcp.json.tmpl`). Toggle i
 | prepper      | `prepper`        | stdio      | Pre-session context builder       |
 | sentinel     | `sentinel`       | stdio      | On-chain contract monitor         |
 | patchbot     | `patchbot`       | stdio      | Polyglot dependency updater       |
-| datadog      | `datadog`        | http/OAuth | us5.datadoghq.com, no secrets     |
+| signoz       | `signoz`         | stdio      | Primary observability. API key from 1Password at runtime |
+| datadog      | `datadog`        | http/OAuth | Disabled fallback (`datadog = false`). us5.datadoghq.com, no secrets |
 | sentry       | `sentry`         | http/OAuth | mcp.sentry.dev, no secrets        |
-| signoz       | `signoz`         | stdio      | API key from 1Password at runtime |
 
 Agent MCP servers (coingecko through patchbot) all share the same `<binary> serve` invocation pattern — they're CLIs from [agent-skills](https://github.com/DROOdotFOO/agent-skills) that double as MCP stdio servers.
 
-**Datadog:** Enable `datadog = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
-
-**Sentry:** Enable `sentry = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
-
-**SigNoz setup:**
+**SigNoz (primary):** Observability backend for Riddler (OTel -> SigNoz on mini-axol). Setup:
 
 1. `make setup-signoz-mcp` (builds from source, requires Go)
-2. Store API key: `op item create --vault Employee --category login --title "SigNoz API Key" credential=<key>`
-3. Set `signoz = true` in chezmoi.toml, `chezmoi apply`
+2. Token: read at runtime from `op://Employee/SigNoz mini-axol/service_account_token` (the wrapper resolves it; no separate item to create)
+3. Set `signoz = true` in chezmoi.toml, `chezmoi apply`. Requires Tailscale up (`signoz_url` is a tailnet host).
+
+**Datadog (disabled fallback):** Kept for one-flag rollback. Enable `datadog = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
+
+**Sentry:** Enable `sentry = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
 
 ## Claude Code Skills
 
@@ -182,6 +182,8 @@ Skills are sourced from [DROOdotFOO/agent-skills](https://github.com/DROOdotFOO/
 | claude-api  | `anthropic` imports, SDK usage                                             |
 | droo-stack  | Elixir, TS, Go, Rust, C, Zig, Python, Lua, Shell, Noir, Chezmoi            |
 | raxol       | Raxol TUI/agent imports, headless/MCP tools                                |
+| raxol-payments | :raxol_payments/:raxol_acp, Xochi/Riddler, agent wallets, ACP jobs      |
+| raxol-symphony | :raxol_symphony, tracker-driven coding-agent orchestration             |
 | design-ux   | Component design, layout, tokens, accessibility, TUI aesthetics, DESIGN.md |
 | nix         | `.nix` files, flakes, NixOS, Home Manager, agent-skills packaging, rigup   |
 | native-code | NIFs (C/Rust), SIMD (Zig), erl_nif.h, Rustler, BEAM native boundary        |
