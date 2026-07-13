@@ -62,10 +62,12 @@ watchdog = true
 prepper = true
 sentinel = true
 patchbot = true
+regen = true
 
 # MCP/Observability
 datadog_site = "us5.datadoghq.com"
 signoz_url = "http://mini-axol.tail9b2ce8.ts.net:3301"
+regen_url = "http://mini-axol.tail9b2ce8.ts.net:3302" # open mode behind Tailscale; no auth
 
 # Platform-specific
 {{- if and (eq .chezmoi.os "darwin") (eq .chezmoi.arch "arm64") }}

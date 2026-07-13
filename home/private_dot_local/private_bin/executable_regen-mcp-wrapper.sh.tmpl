@@ -1,0 +1,12 @@
+#!/bin/bash
+# Wrapper for the regen MCP server; injects the Regen base URL (+ optional auth) at runtime.
+set -euo pipefail
+
+export REGEN_BASE_URL="{{ .regen_url }}"
+export REGEN_ENABLE_WRITE="1" # Claude may ack/resolve/update incidents; drop this line for read-only
+
+# AUTH: Regen OSS v1.0.0 has NO API-token auth (cookie / SAML / open-mode only). Open mode
+# behind Tailscale needs no secret. If Regen local-auth is enabled, inject the session cookie:
+# export REGEN_SESSION_COOKIE="$(op read "op://Employee/Regen mini-axol/oi_session")"
+
+exec regen serve
