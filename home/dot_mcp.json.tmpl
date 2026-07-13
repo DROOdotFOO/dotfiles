@@ -62,6 +62,12 @@
       "args": []
     }
 {{- end }}
+{{- if .regen }},
+    "regen": {
+      "command": "{{ .chezmoi.homeDir }}/.local/bin/regen-mcp-wrapper.sh",
+      "args": []
+    }
+{{- end }}
 {{- if .datadog }},
     "datadog": {
       "type": "http",

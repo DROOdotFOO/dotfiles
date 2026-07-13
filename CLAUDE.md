@@ -47,7 +47,7 @@ make lazy-load-stats      # Show lazy loading stats
 # macOS:    paperwm, raycast, llvm, postgres, psql
 # Web3:     foundry, huff, solana
 # Apps:     work, personal
-# MCP:      datadog, sentry, signoz, coingecko, digest, recall, autoresearch, watchdog, prepper, sentinel, patchbot
+# MCP:      datadog, sentry, signoz, regen, coingecko, digest, recall, autoresearch, watchdog, prepper, sentinel, patchbot
 # Theme:    [data.theme] -- full Synthwave84 palette (bg, fg, accent, ANSI colors)
 ```
 
@@ -156,6 +156,7 @@ Managed via `~/.mcp.json` (chezmoi template: `home/dot_mcp.json.tmpl`). Toggle i
 | sentinel     | `sentinel`       | stdio      | On-chain contract monitor         |
 | patchbot     | `patchbot`       | stdio      | Polyglot dependency updater       |
 | signoz       | `signoz`         | stdio      | Primary observability. API key from 1Password at runtime |
+| regen        | `regen`          | stdio      | Fluidify Regen incidents; wrapper injects `regen_url` (+ optional cookie). Correlates with signoz |
 | datadog      | `datadog`        | http/OAuth | Disabled fallback (`datadog = false`). us5.datadoghq.com, no secrets |
 | sentry       | `sentry`         | http/OAuth | mcp.sentry.dev, no secrets        |
 
@@ -166,6 +167,8 @@ Agent MCP servers (coingecko through patchbot) all share the same `<binary> serv
 1. `make setup-signoz-mcp` (builds from source, requires Go)
 2. Token: read at runtime from `op://Employee/SigNoz mini-axol/service_account_token` (the wrapper resolves it; no separate item to create)
 3. Set `signoz = true` in chezmoi.toml, `chezmoi apply`. Requires Tailscale up (`signoz_url` is a tailnet host).
+
+**Regen:** Fluidify Regen incident reader (`regen serve` from agent-skills `agents/regen/`), symmetric with signoz. Live at `regen_url` = `http://mini-axol.tail9b2ce8.ts.net:3302` (origin only; the client appends `/api/v1`). Wrapper `executable_regen-mcp-wrapper.sh.tmpl` exports `REGEN_BASE_URL` (`regen_url`) and `REGEN_ENABLE_WRITE=1` (drop for read-only). Regen OSS has no API-token auth and runs in **open mode** behind the Tailscale ACL -- no secret needed; the commented `REGEN_SESSION_COOKIE` `op read` line is only for a future local-auth/SAML instance. Guardrail: do not create a Regen user or enable SAML, or open mode closes and the wrapper breaks.
 
 **Datadog (disabled fallback):** Kept for one-flag rollback. Enable `datadog = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
 
