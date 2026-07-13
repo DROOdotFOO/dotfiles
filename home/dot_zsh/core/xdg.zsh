@@ -73,10 +73,6 @@ export BUNDLE_USER_CONFIG="${XDG_CONFIG_HOME}/bundle"
 export BUNDLE_USER_CACHE="${XDG_CACHE_HOME}/bundle"
 export BUNDLE_USER_PLUGIN="${XDG_DATA_HOME}/bundle"
 
-# asdf
-export ASDF_CONFIG_FILE="${XDG_CONFIG_HOME}/asdf/asdfrc"
-export ASDF_DATA_DIR="${XDG_DATA_HOME}/asdf"
-
 # Elixir/Erlang
 export HEX_HOME="${XDG_DATA_HOME}/hex"
 export MIX_HOME="${XDG_DATA_HOME}/mix"
