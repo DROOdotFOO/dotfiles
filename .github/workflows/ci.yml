@@ -29,8 +29,22 @@ jobs:
 
       - name: Check for template syntax errors
         run: |
+          # `execute-template --init` only simulates prompt* functions; it does NOT
+          # populate [data]. Render the config template once so [data] flags
+          # (rust, coingecko, signoz, ...) are available to regular templates.
+          chezmoi execute-template --init --source "$PWD" \
+            --promptString name=ci \
+            --promptString email=ci@example.com \
+            --promptString github=ci \
+            --promptString age_recipient= \
+            --promptString personal=false < .chezmoi.toml.tmpl > /tmp/chezmoi-ci.toml
           find . -name "*.tmpl" -o -name "*.conf" | xargs -I {} grep -l "{{.*}}" {} | while read file; do
             echo "Checking $file for template syntax..."
+            # Config template is validated by the render step above.
+            if [[ "$file" == *".chezmoi.toml.tmpl" ]]; then
+              echo "Skipping $file (config template, validated on render)"
+              continue
+            fi
             # Skip SSH private key template as it requires personal flag and 1Password
             if [[ "$file" == *"private_id_rsa.tmpl" ]]; then
               echo "Skipping $file (requires personal flag and 1Password)"
@@ -51,12 +65,8 @@ jobs:
               echo "Skipping $file (requires 1Password)"
               continue
             fi
-            # Skip signoz wrapper as it requires chezmoi data (signoz_url)
-            if [[ "$file" == *"signoz-mcp-wrapper"* ]]; then
-              echo "Skipping $file (requires chezmoi data)"
-              continue
-            fi
-            chezmoi execute-template --init --promptString email=test@example.com --promptString name=test --promptString personal=false < "$file" > /dev/null
+            # Lint against the rendered config so [data] flags resolve.
+            chezmoi --config /tmp/chezmoi-ci.toml execute-template < "$file" > /dev/null
           done
 
   test:
