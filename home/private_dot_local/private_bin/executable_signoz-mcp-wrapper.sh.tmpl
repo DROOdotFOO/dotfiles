@@ -3,7 +3,7 @@
 set -euo pipefail
 
 export SIGNOZ_URL="{{ .signoz_url }}"
-export SIGNOZ_API_KEY="$(op read "op://Employee/SigNoz API Key/credential")"
+export SIGNOZ_API_KEY="$(op read "op://Employee/SigNoz mini-axol/service_account_token")"
 export LOG_LEVEL="info"
 
 exec "{{ .chezmoi.homeDir }}/.local/bin/signoz-mcp-server" "$@"
