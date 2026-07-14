@@ -68,10 +68,10 @@ show_status() {
     fi
 
     if command -v op &>/dev/null; then
-        if op item get "SigNoz API Key" --vault Employee &>/dev/null 2>&1; then
-            echo "  API Key: stored in 1Password"
+        if op read "op://Employee/SigNoz mini-axol/service_account_token" &>/dev/null 2>&1; then
+            echo "  API Key: stored in 1Password (Employee/SigNoz mini-axol)"
         else
-            echo "  API Key: not found in 1Password (Employee/SigNoz API Key)"
+            echo "  API Key: not found (op://Employee/SigNoz mini-axol/service_account_token)"
         fi
     else
         echo "  API Key: 1Password CLI not available"
