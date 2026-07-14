@@ -116,7 +116,8 @@ autoPush = false
 # To use 1Password-backed decryption (no key on disk), create ~/.config/chezmoi/age-op-decrypt.sh
 # Otherwise, use a plaintext key file: identity = "~/.config/chezmoi/age_key.txt"
 {{ if stat (joinPath .chezmoi.homeDir ".config/chezmoi/age-op-decrypt.sh") -}}
-command = "~/.config/chezmoi/age-op-decrypt.sh"
+# Absolute path required: chezmoi execs age.command without shell tilde expansion.
+command = {{ (joinPath .chezmoi.homeDir ".config/chezmoi/age-op-decrypt.sh") | quote }}
 {{ else -}}
 identity = "~/.config/chezmoi/age_key.txt"
 {{ end -}}
