@@ -140,3 +140,12 @@
 
 [safe]
     directory = *
+
+# GitHub/Gist HTTPS auth delegated to the gh CLI (gh auth setup-git).
+# Empty helper resets any inherited helper so gh is the sole credential source.
+[credential "https://github.com"]
+    helper =
+    helper = !{{ .brewPrefix }}/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+    helper =
+    helper = !{{ .brewPrefix }}/bin/gh auth git-credential
