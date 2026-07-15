@@ -143,6 +143,10 @@
 
 # GitHub/Gist HTTPS auth delegated to the gh CLI (gh auth setup-git).
 # Empty helper resets any inherited helper so gh is the sole credential source.
+# Caveat: `gh auth setup-git` rewrites these blocks into ~/.gitconfig with tabs and
+# a trailing space, re-drifting from this (space-indented) source. When `chezmoi diff`
+# shows only whitespace/format changes on these lines it is benign -- renormalize with
+# `chezmoi apply --force ~/.gitconfig`.
 [credential "https://github.com"]
     helper =
     helper = !{{ .brewPrefix }}/bin/gh auth git-credential
