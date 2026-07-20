@@ -1,0 +1,62 @@
+#!/bin/bash
+{{- if or .digest .recall .autoresearch .watchdog .prepper .sentinel .patchbot .regen }}
+# agents pyproject hash: {{ output "bash" "-c" (print "cat " .chezmoi.homeDir "/CODE/agent-skills/agents/*/pyproject.toml 2>/dev/null | shasum -a 256 | cut -d' ' -f1 || true") }}
+# Editable-install the agent-skills MCP CLIs into mise's pinned Python so the servers
+# referenced by ~/.mcp.json actually exist. Re-runs when any agent pyproject changes.
+# Must sort after mise-install (provides python) -- hence the "setup-agents" name.
+
+set -euo pipefail
+
+AGENT_SKILLS_DIR="{{ .chezmoi.homeDir }}/CODE/agent-skills"
+PY_VERSION="3.10.13"
+
+if [[ ! -d "$AGENT_SKILLS_DIR/agents" ]]; then
+    echo "[chezmoi] agent-skills repo not found at $AGENT_SKILLS_DIR; skipping agent install" >&2
+    exit 0
+fi
+
+if ! command -v mise &>/dev/null; then
+    echo "[chezmoi] mise not found; skipping agent install" >&2
+    exit 0
+fi
+
+# shared is a dependency of every agent; scribe has no MCP flag but is one of the CLIs.
+agents=(shared scribe)
+{{- if .digest }}
+agents+=(digest)
+{{- end }}
+{{- if .recall }}
+agents+=(recall)
+{{- end }}
+{{- if .autoresearch }}
+agents+=(autoresearch)
+{{- end }}
+{{- if .watchdog }}
+agents+=(watchdog)
+{{- end }}
+{{- if .prepper }}
+agents+=(prepper)
+{{- end }}
+{{- if .sentinel }}
+agents+=(sentinel)
+{{- end }}
+{{- if .patchbot }}
+agents+=(patchbot)
+{{- end }}
+{{- if .regen }}
+agents+=(regen)
+{{- end }}
+
+echo "[chezmoi] installing agent CLIs into mise python@${PY_VERSION}: ${agents[*]}"
+for a in "${agents[@]}"; do
+    pkg="$AGENT_SKILLS_DIR/agents/$a"
+    if [[ -f "$pkg/pyproject.toml" ]]; then
+        mise exec "python@${PY_VERSION}" -- python -m pip install --quiet -e "$pkg"
+    else
+        echo "[chezmoi] skip $a (no pyproject at $pkg)" >&2
+    fi
+done
+
+# Regenerate mise shims so the new console scripts land on PATH.
+mise reshim
+{{- end }}
