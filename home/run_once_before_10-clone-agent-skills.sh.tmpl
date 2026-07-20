@@ -1,0 +1,22 @@
+#!/bin/bash
+{{- if or .digest .recall .autoresearch .watchdog .prepper .sentinel .patchbot .regen }}
+# Clone the agent-skills repo once, so the MCP agent CLIs can be editable-installed from it.
+# run_once + existence guard => never touches an existing working clone (shared-home case).
+
+set -euo pipefail
+
+AGENT_SKILLS_DIR="{{ .chezmoi.homeDir }}/CODE/agent-skills"
+
+if [[ -d "$AGENT_SKILLS_DIR" ]]; then
+    exit 0
+fi
+
+if ! command -v git &>/dev/null; then
+    echo "[chezmoi] git not found; skipping agent-skills clone" >&2
+    exit 0
+fi
+
+echo "[chezmoi] cloning agent-skills into $AGENT_SKILLS_DIR"
+mkdir -p "$(dirname "$AGENT_SKILLS_DIR")"
+git clone https://github.com/DROOdotFOO/agent-skills.git "$AGENT_SKILLS_DIR"
+{{- end }}

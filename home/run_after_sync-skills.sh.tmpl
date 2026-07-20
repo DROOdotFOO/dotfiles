@@ -1,39 +1,56 @@
 #!/bin/bash
-# Sync skills: ~/.agents/skills/* -> ~/.claude/skills/* (symlinks)
+# Sync skills: ~/.agents/skills/* and ~/.agents/skills-extra/* -> ~/.claude/skills/* (symlinks).
+# skills/ comes from the agent-skills tarball (chezmoi external); skills-extra/ holds vendored
+# third-party skills (e.g. virtuals-protocol-acp) the external does not manage.
 # Runs on every apply (script is idempotent; previous run_onchange_ trigger keyed
 # off .chezmoiexternal.toml hash and missed external content refreshes).
 
 set -euo pipefail
 
-SKILLS_DIR="$HOME/.agents/skills"
+SKILL_ROOTS=("$HOME/.agents/skills" "$HOME/.agents/skills-extra")
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 
-if [[ ! -d "$SKILLS_DIR" ]]; then
-    exit 0
-fi
+# Nothing to do until at least one source root exists.
+have_root=0
+for root in "${SKILL_ROOTS[@]}"; do
+    [[ -d "$root" ]] && have_root=1
+done
+[[ "$have_root" -eq 1 ]] || exit 0
 
 mkdir -p "$CLAUDE_SKILLS_DIR"
+
+# True if a skill name exists in any source root.
+skill_exists() {
+    local name="$1" root
+    for root in "${SKILL_ROOTS[@]}"; do
+        [[ -d "$root/$name" ]] && return 0
+    done
+    return 1
+}
 
 # Remove broken symlinks
 find "$CLAUDE_SKILLS_DIR" -maxdepth 1 -type l ! -exec test -e {} \; -delete 2>/dev/null || true
 
-# Remove stale symlinks (skill no longer exists in source)
+# Remove stale symlinks (skill no longer exists in any source root)
 for link in "$CLAUDE_SKILLS_DIR"/*/; do
     [[ -L "${link%/}" ]] || continue
     link_name="$(basename "$link")"
-    if [[ ! -d "$SKILLS_DIR/$link_name" ]]; then
+    if ! skill_exists "$link_name"; then
         rm -f "$CLAUDE_SKILLS_DIR/$link_name"
         echo "[chezmoi] Removed stale skill link: $link_name"
     fi
 done
 
-# Create symlinks for each skill
-for skill_dir in "$SKILLS_DIR"/*/; do
-    [[ -d "$skill_dir" ]] || continue
-    skill_name="$(basename "$skill_dir")"
-    link_path="$CLAUDE_SKILLS_DIR/$skill_name"
-    if [[ ! -L "$link_path" ]]; then
-        ln -s "../../.agents/skills/$skill_name" "$link_path"
+# Create symlinks for each skill; earlier roots win on name clash (skills/ over skills-extra/).
+for root in "${SKILL_ROOTS[@]}"; do
+    [[ -d "$root" ]] || continue
+    rel="../../.agents/$(basename "$root")"
+    for skill_dir in "$root"/*/; do
+        [[ -d "$skill_dir" ]] || continue
+        skill_name="$(basename "$skill_dir")"
+        link_path="$CLAUDE_SKILLS_DIR/$skill_name"
+        [[ -L "$link_path" ]] && continue
+        ln -s "$rel/$skill_name" "$link_path"
         echo "[chezmoi] Linked skill: $skill_name"
-    fi
+    done
 done
