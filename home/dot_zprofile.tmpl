@@ -5,8 +5,13 @@
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
 export MANPATH="/opt/local/share/man:$MANPATH"
 
-# Homebrew
-eval "$({{ .brewPrefix }}/bin/brew shellenv)"
+# Homebrew (cached: `brew shellenv` costs ~0.4s; regenerated when brew itself updates)
+_brew_env="${XDG_CACHE_HOME:-$HOME/.cache}/brew-shellenv.zsh"
+if [[ ! -s "$_brew_env" || "{{ .brewPrefix }}/bin/brew" -nt "$_brew_env" ]]; then
+    mkdir -p "${_brew_env:h}" && "{{ .brewPrefix }}/bin/brew" shellenv zsh >| "$_brew_env"
+fi
+source "$_brew_env"
+unset _brew_env
 
 {{- if .solana -}}
 # Solana

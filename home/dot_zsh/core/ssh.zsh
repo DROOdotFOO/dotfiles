@@ -14,9 +14,9 @@ fi
 if [[ "$(uname -s)" == "Darwin" ]]; then
     # Detect if 1Password agent is active (contains "1password" in path)
     if [[ "$SSH_AUTH_SOCK" == *"1password"* || "$SSH_AUTH_SOCK" == *"2BUA8C4S2C"* ]]; then
-        # Find macOS launchd SSH agent socket
-        _macos_agent=$(find /private/tmp -name "Listeners" -path "*/com.apple.launchd.*" 2>/dev/null | head -1)
-        if [[ -S "$_macos_agent" ]]; then
+        # Find macOS launchd SSH agent socket (glob, not find: /private/tmp can hold large trees)
+        _macos_agent=(/private/tmp/com.apple.launchd.*/Listeners(N=[1]))
+        if [[ -n "$_macos_agent" ]]; then
             # Export for subprocesses (Ansible, git, etc.)
             export SSH_AUTH_SOCK_MACOS="$_macos_agent"
             # Override to use macOS agent for Keychain-stored keys
