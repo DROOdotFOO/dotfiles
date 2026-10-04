@@ -1,19 +1,15 @@
 {
     "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
     "logo": {
-{{- if eq .chezmoi.os "darwin" }}
-        "source": "macos",
-{{- else }}
-        "source": "linux",
-{{- end }}
+        "type": "file",
+        "source": "~/.config/fastfetch/axolotl.txt",
         "padding": {
             "top": 1,
             "left": 2,
             "right": 2
         },
         "color": {
-            "1": "magenta",
-            "2": "cyan"
+            "1": "38;5;218"
         }
     },
     "display": {
