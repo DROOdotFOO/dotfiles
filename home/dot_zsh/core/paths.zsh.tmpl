@@ -1,6 +1,10 @@
 # shellcheck disable=all
 # Centralized PATH management
 
+# Keep PATH entries unique (first occurrence wins) for both array and scalar assignments;
+# a later prepend moves an existing entry to the front
+typeset -gU PATH path
+
 # PATH registry
 declare -A PATH_REGISTRY=(
     # Base paths
@@ -41,25 +45,34 @@ declare -A PATH_REGISTRY=(
     ["nix_profile"]="/nix/var/nix/profiles/default/bin"
 )
 
-# Function to add path safely
+# Function to add path safely; accepts a colon-separated list, order preserved
 add_to_path() {
-    local path_to_add="$1"
+    local -a dirs=("${(@s.:.)1}")
     local position="${2:-end}"  # "begin" or "end"
+    local dir
 
-    if [[ -d "$path_to_add" ]]; then
+    # Prepend in reverse so "a:b" lands as "a:b:$PATH", not "b:a:$PATH"
+    [[ "$position" == "begin" ]] && dirs=("${(@Oa)dirs}")
+
+    for dir in "${dirs[@]}"; do
+        [[ -d "$dir" ]] || continue
         case "$position" in
             "begin")
-                export PATH="$path_to_add:$PATH"
+                export PATH="$dir:$PATH"
                 ;;
             "end")
-                export PATH="$PATH:$path_to_add"
+                export PATH="$PATH:$dir"
                 ;;
         esac
-    fi
+    done
 }
 
 # Build PATH based on configuration
 build_path() {
+    # Entries set before this file (.zshenv, .zprofile, parent process) are kept after registry paths
+    local -a inherited=("${path[@]}")
+    local dir
+
     # Start with base path
     export PATH="${PATH_REGISTRY[base]}"
 
@@ -122,6 +135,10 @@ build_path() {
     {{- end }}
     add_to_path "${PATH_REGISTRY[pipx]}"
     add_to_path "${PATH_REGISTRY[npm_global]}"
+
+    for dir in "${inherited[@]}"; do
+        [[ -n "$dir" && -d "$dir" ]] && path+=("$dir")
+    done
 }
 
 # Initialize PATH
