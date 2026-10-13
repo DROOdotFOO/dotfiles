@@ -110,6 +110,8 @@ bash -n "$rendered_setup"
 claude_mcp="$WORK_DIR/mcp.json"
 chezmoi execute-template <"$DOTFILES_ROOT/home/dot_mcp.json.tmpl" >"$claude_mcp"
 jq -e '.mcpServers.scribe.command == "scribe"' "$claude_mcp" >/dev/null
+jq -e '.mcpServers.linear.type == "http" and (.mcpServers.linear.url | startswith("https://mcp.linear.app/mcp"))' \
+    "$claude_mcp" >/dev/null || fail "Claude MCP config lost Linear"
 
 codex_home="$WORK_DIR/codex"
 mkdir -p "$codex_home"
@@ -128,5 +130,8 @@ CODEX_HOME="$codex_home" codex mcp get blockscout --json |
     jq -e '.transport.type == "streamable_http" and .transport.url == "https://mcp.blockscout.com/mcp"' >/dev/null
 CODEX_HOME="$codex_home" codex mcp get scribe --json |
     jq -e '.transport.type == "stdio" and .transport.command == "scribe" and .transport.args == ["serve"]' >/dev/null
+CODEX_HOME="$codex_home" codex mcp get linear --json |
+    jq -e '.transport.type == "streamable_http" and (.transport.url | startswith("https://mcp.linear.app/mcp"))' >/dev/null ||
+    fail "Codex MCP config lost Linear"
 
 printf 'Codex target checks passed\n'

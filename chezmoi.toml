@@ -42,6 +42,8 @@ work = false
 datadog = false
 sentry = false
 signoz = true
+linear = true
+linear_readonly = false
 
 # MCP/Observability
 datadog_site = "us5.datadoghq.com"
