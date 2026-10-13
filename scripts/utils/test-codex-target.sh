@@ -59,6 +59,19 @@ HOME="$test_home" bash "$DOTFILES_ROOT/home/run_after_sync-skills.sh.tmpl" >/dev
     fail "tool-installed skill directory was replaced"
 [[ -L "$test_home/.agents/skills/later" ]] || fail "new upstream skill was not linked alongside installed dir"
 [[ -L "$test_home/.claude/skills/installed" ]] || fail "tool-installed skill was not exposed to Claude"
+sync_output="$(HOME="$test_home" bash "$DOTFILES_ROOT/home/run_after_sync-skills.sh.tmpl" 2>&1)"
+[[ "$sync_output" != *"Removed stale Claude skill link: installed"* ]] ||
+    fail "tool-installed skill link churns on every run"
+[[ -L "$test_home/.claude/skills/installed" ]] || fail "tool-installed skill lost its Claude link"
+
+# A real directory that shares a name with a source skill wins, but loudly.
+mkdir -p "$test_home/.agents/skills-upstream/installed"
+printf '%s\n' '# upstream copy' >"$test_home/.agents/skills-upstream/installed/SKILL.md"
+sync_output="$(HOME="$test_home" bash "$DOTFILES_ROOT/home/run_after_sync-skills.sh.tmpl" 2>&1)"
+[[ "$sync_output" == *"WARNING: $test_home/.agents/skills/installed is a real directory and shadows"* ]] ||
+    fail "shadowed upstream skill was not reported"
+[[ "$(cat "$test_home/.agents/skills/installed/SKILL.md")" == '# installed' ]] ||
+    fail "tool-installed skill was replaced by the upstream copy"
 
 hooks_script="$WORK_DIR/modify-hooks.sh"
 hooks_json="$WORK_DIR/hooks.json"

@@ -13,8 +13,11 @@
 # every other event survives untouched.
 #
 # Trade-off: the merge only adds, so disabling an event here no longer removes
-# it from the target. Delete it from ~/.codex/hooks.json by hand. Codex still
-# asks you to review and trust any hook it did not see before.
+# it from the target. Delete it from ~/.codex/hooks.json by hand.
+#
+# Codex trusts hooks individually by a hash of (event, matcher, command), not
+# by file content, so reformatting on merge does not re-prompt, while any hook
+# a tool adds or changes stays disabled until you trust it in Codex.
 
 set -eu
 
