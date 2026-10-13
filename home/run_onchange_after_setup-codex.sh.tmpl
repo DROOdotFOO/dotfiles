@@ -94,5 +94,10 @@ add_http sentry https://mcp.sentry.dev/sse
 {{- else }}
 remove_server sentry
 {{- end }}
+{{- if .linear }}
+add_http linear "https://mcp.linear.app/mcp{{ if .linear_readonly }}/readonly{{ end }}"
+{{- else }}
+remove_server linear
+{{- end }}
 
 printf '[chezmoi] Codex MCP configuration updated\n'

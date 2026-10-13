@@ -54,7 +54,7 @@ make emacs-restart        # Restart the Emacs daemon
 # macOS:    paperwm, raycast, llvm, postgres, psql
 # Web3:     foundry, huff, solana
 # Apps:     work, personal
-# MCP:      datadog, sentry, signoz, regen, coingecko, digest, recall, autoresearch, watchdog, prepper, sentinel, patchbot
+# MCP:      datadog, sentry, signoz, regen, linear, coingecko, digest, recall, autoresearch, watchdog, prepper, sentinel, patchbot
 # Theme:    [data.theme] -- full Synthwave84 palette (bg, fg, accent, ANSI colors)
 #           [data.theme.soft] -- Synthwave84 Soft variant + syntax roles (Zed/Emacs)
 ```
@@ -213,6 +213,7 @@ Claude Code uses `~/.mcp.json` (`home/dot_mcp.json.tmpl`). Codex entries are reg
 | regen        | `regen`        | stdio      | Fluidify Regen incidents; wrapper injects `regen_url` (+ optional cookie). Correlates with signoz |
 | datadog      | `datadog`      | http/OAuth | Disabled fallback (`datadog = false`). us5.datadoghq.com, no secrets                              |
 | sentry       | `sentry`       | http/OAuth | mcp.sentry.dev, no secrets                                                                        |
+| linear       | `linear`       | http/OAuth | mcp.linear.app; `linear_readonly = true` switches to `/mcp/readonly`. No secrets                  |
 
 Agent MCP servers (coingecko through patchbot) all share the same `<binary> serve` invocation pattern — they're CLIs from [agent-skills](https://github.com/DROOdotFOO/agent-skills) that double as MCP stdio servers.
 
@@ -227,6 +228,8 @@ Agent MCP servers (coingecko through patchbot) all share the same `<binary> serv
 **Datadog (disabled fallback):** Kept for one-flag rollback. Enable `datadog = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
 
 **Sentry:** Enable `sentry = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
+
+**Linear:** `linear = true` (default). OAuth via browser: Claude Code `/mcp` -> authenticate; Codex `codex mcp login linear`. Set `linear_readonly = true` to pin both renderers to `/mcp/readonly`, where the server drops every write tool; the cached credential is keyed by URL, so log in again on each host after flipping it. Re-auth after errors: Claude Code `/mcp` -> clear auth; Codex `codex mcp logout linear && codex mcp login linear`. `~/.mcp-auth` belongs to mcp-remote and is untouched by either host.
 
 ## Agent Skills
 
@@ -287,6 +290,7 @@ The merger intentionally supports one skill directory level, matching Codex and 
 | prepper      | Project briefings, "catch me up", "prep me", `/prepper`       |
 | sentinel     | Contract monitoring, on-chain alerts, suspicious transactions |
 | watchdog     | Repo health, stale PRs, CI status, security advisories        |
+| linear       | Linear issues, projects, cycles, `LIN-123` IDs, "create a Linear issue" |
 
 **Workflow skills** (41 total) -- architect, code-review, tdd, focused-fix, adversarial-reviewer, prd-to-plan, prd-to-issues, release, frontend-slop-audit, and more. Each has a SKILL.md with trigger conditions.
 

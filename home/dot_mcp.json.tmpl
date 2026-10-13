@@ -86,5 +86,11 @@
       "url": "https://mcp.sentry.dev/sse"
     }
 {{- end }}
+{{- if .linear }},
+    "linear": {
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp{{ if .linear_readonly }}/readonly{{ end }}"
+    }
+{{- end }}
   }
 }
