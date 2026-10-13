@@ -27,26 +27,18 @@ done
 [[ "$have_source" -eq 1 ]] || exit 0
 
 # Older revisions unpacked the archive directly into ~/.agents/skills. Preserve
-# that tree once, then replace it with a symlink-only merged view.
-needs_migration=0
-if [[ -d "$MERGED_SKILLS_DIR" ]]; then
+# that tree once, then replace it with a symlink-only merged view. After that
+# migration, real directories in the merged root are tool-installed skills
+# (`npx impeccable install` writes one) and are left in place: the link loops
+# below never replace or delete a non-symlink entry.
+if [[ -d "$MERGED_SKILLS_DIR" && ! -e "$LEGACY_BACKUP_DIR" && ! -L "$LEGACY_BACKUP_DIR" ]]; then
     for entry in "$MERGED_SKILLS_DIR"/*; do
         [[ -e "$entry" || -L "$entry" ]] || continue
-        if [[ ! -L "$entry" ]]; then
-            needs_migration=1
-            break
-        fi
+        [[ -L "$entry" ]] && continue
+        mv "$MERGED_SKILLS_DIR" "$LEGACY_BACKUP_DIR"
+        printf '[chezmoi] Preserved legacy skill tree at %s\n' "$LEGACY_BACKUP_DIR"
+        break
     done
-fi
-
-if [[ "$needs_migration" -eq 1 ]]; then
-    if [[ -e "$LEGACY_BACKUP_DIR" || -L "$LEGACY_BACKUP_DIR" ]]; then
-        printf '[chezmoi] Refusing to replace %s: backup already exists at %s\n' \
-            "$MERGED_SKILLS_DIR" "$LEGACY_BACKUP_DIR" >&2
-        exit 1
-    fi
-    mv "$MERGED_SKILLS_DIR" "$LEGACY_BACKUP_DIR"
-    printf '[chezmoi] Preserved legacy skill tree at %s\n' "$LEGACY_BACKUP_DIR"
 fi
 
 mkdir -p "$MERGED_SKILLS_DIR" "$CLAUDE_SKILLS_DIR"

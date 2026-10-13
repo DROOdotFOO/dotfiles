@@ -1,0 +1,78 @@
+#!/bin/sh
+# chezmoi `modify_` script -> ~/.codex/hooks.json
+#
+# Tools install their own hook events into this file: `npx impeccable install`
+# adds `PostToolUse` and `Stop` entries. A plain managed file deleted them on
+# every `chezmoi apply` -- the same failure mode fixed for ~/.claude/settings.json
+# and ~/.config/zed/settings.json.
+#
+# stdin is the current target, stdout becomes the new target, so the managed
+# block below is merged *over* whatever is already there. jq's `*` merges
+# objects recursively with the right-hand side winning: the managed events
+# (`PreToolUse`, and `SessionStart` when prepper is on) stay authoritative,
+# every other event survives untouched.
+#
+# Trade-off: the merge only adds, so disabling an event here no longer removes
+# it from the target. Delete it from ~/.codex/hooks.json by hand. Codex still
+# asks you to review and trust any hook it did not see before.
+
+set -eu
+
+managed=$(
+    cat <<'MANAGED_HOOKS'
+{
+  "description": "Personal Codex safety and project-context hooks.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": {{ printf "%s/.claude/hooks/block-rm-rf.sh" .chezmoi.homeDir | toJson }},
+            "statusMessage": "Checking destructive file operations"
+          },
+          {
+            "type": "command",
+            "command": {{ printf "%s/.claude/hooks/block-destructive-git.sh" .chezmoi.homeDir | toJson }},
+            "statusMessage": "Checking destructive git operations"
+          }
+        ]
+      }
+    ]{{- if .prepper }},
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": {{ printf "%s/CODE/agent-skills/scripts/hooks/prepper-session-start.sh" .chezmoi.homeDir | toJson }},
+            "timeout": 30,
+            "statusMessage": "Loading project briefing"
+          }
+        ]
+      }
+    ]{{- end }}
+  }
+}
+MANAGED_HOOKS
+)
+
+# Always drain stdin, even on the fallback paths, so chezmoi never sees EPIPE.
+current=$(cat)
+
+# Without jq there is no safe merge. Emitting the managed block loses whatever
+# a tool installed; emitting nothing would truncate hooks.json entirely, so
+# prefer the former.
+if ! command -v jq >/dev/null 2>&1; then
+    printf '%s\n' "$managed"
+    exit 0
+fi
+
+# Fresh machine, or a file that is empty or not valid JSON: start from managed.
+if [ -z "$current" ] || ! printf '%s' "$current" | jq -e . >/dev/null 2>&1; then
+    printf '%s\n' "$managed"
+    exit 0
+fi
+
+printf '%s' "$current" | jq --argjson managed "$managed" '. * $managed'
