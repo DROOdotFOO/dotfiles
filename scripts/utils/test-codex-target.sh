@@ -107,10 +107,15 @@ rendered_setup="$WORK_DIR/setup-codex.sh"
 chezmoi execute-template <"$DOTFILES_ROOT/home/run_onchange_after_setup-codex.sh.tmpl" >"$rendered_setup"
 bash -n "$rendered_setup"
 
+linear_url="https://mcp.linear.app/mcp"
+if [[ "$(chezmoi data --format json | jq -r '.linear_readonly')" == true ]]; then
+    linear_url="https://mcp.linear.app/mcp/readonly"
+fi
+
 claude_mcp="$WORK_DIR/mcp.json"
 chezmoi execute-template <"$DOTFILES_ROOT/home/dot_mcp.json.tmpl" >"$claude_mcp"
 jq -e '.mcpServers.scribe.command == "scribe"' "$claude_mcp" >/dev/null
-jq -e '.mcpServers.linear.type == "http" and (.mcpServers.linear.url | startswith("https://mcp.linear.app/mcp"))' \
+jq -e --arg url "$linear_url" '.mcpServers.linear.type == "http" and .mcpServers.linear.url == $url' \
     "$claude_mcp" >/dev/null || fail "Claude MCP config lost Linear"
 
 codex_home="$WORK_DIR/codex"
@@ -131,7 +136,7 @@ CODEX_HOME="$codex_home" codex mcp get blockscout --json |
 CODEX_HOME="$codex_home" codex mcp get scribe --json |
     jq -e '.transport.type == "stdio" and .transport.command == "scribe" and .transport.args == ["serve"]' >/dev/null
 CODEX_HOME="$codex_home" codex mcp get linear --json |
-    jq -e '.transport.type == "streamable_http" and (.transport.url | startswith("https://mcp.linear.app/mcp"))' >/dev/null ||
+    jq -e --arg url "$linear_url" '.transport.type == "streamable_http" and .transport.url == $url' >/dev/null ||
     fail "Codex MCP config lost Linear"
 
 printf 'Codex target checks passed\n'

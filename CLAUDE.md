@@ -229,7 +229,7 @@ Agent MCP servers (coingecko through patchbot) all share the same `<binary> serv
 
 **Sentry:** Enable `sentry = true` in chezmoi.toml, `chezmoi apply`. OAuth via browser.
 
-**Linear:** `linear = true` (default). OAuth via browser: Claude Code `/mcp` -> authenticate; Codex `codex mcp login linear`. Set `linear_readonly = true` to pin the host to read tools only (both renderers follow the same flag). Re-auth after errors: `rm -rf ~/.mcp-auth`.
+**Linear:** `linear = true` (default). OAuth via browser: Claude Code `/mcp` -> authenticate; Codex `codex mcp login linear`. Set `linear_readonly = true` to pin both renderers to `/mcp/readonly`, where the server drops every write tool; the cached credential is keyed by URL, so log in again on each host after flipping it. Re-auth after errors: Claude Code `/mcp` -> clear auth; Codex `codex mcp logout linear && codex mcp login linear`. `~/.mcp-auth` belongs to mcp-remote and is untouched by either host.
 
 ## Agent Skills
 
