@@ -12,12 +12,8 @@ is_skill_dir() {
     [[ -f "$1/SKILL.md" ]]
 }
 
-skill_exists() {
-    local name="$1" root
-    for root in "${SKILL_SOURCE_ROOTS[@]}"; do
-        is_skill_dir "$root/$name" && return 0
-    done
-    return 1
+merged_skill() {
+    is_skill_dir "$MERGED_SKILLS_DIR/$1"
 }
 
 have_source=0
@@ -27,26 +23,18 @@ done
 [[ "$have_source" -eq 1 ]] || exit 0
 
 # Older revisions unpacked the archive directly into ~/.agents/skills. Preserve
-# that tree once, then replace it with a symlink-only merged view.
-needs_migration=0
-if [[ -d "$MERGED_SKILLS_DIR" ]]; then
+# that tree once, then replace it with a symlink-only merged view. After that
+# migration, real directories in the merged root are tool-installed skills
+# (`npx impeccable install` writes one) and are left in place: nothing below
+# replaces or deletes a non-symlink entry, and the Claude mirror follows them.
+if [[ -d "$MERGED_SKILLS_DIR" && ! -e "$LEGACY_BACKUP_DIR" && ! -L "$LEGACY_BACKUP_DIR" ]]; then
     for entry in "$MERGED_SKILLS_DIR"/*; do
         [[ -e "$entry" || -L "$entry" ]] || continue
-        if [[ ! -L "$entry" ]]; then
-            needs_migration=1
-            break
-        fi
+        [[ -L "$entry" ]] && continue
+        mv "$MERGED_SKILLS_DIR" "$LEGACY_BACKUP_DIR"
+        printf '[chezmoi] Preserved legacy skill tree at %s\n' "$LEGACY_BACKUP_DIR"
+        break
     done
-fi
-
-if [[ "$needs_migration" -eq 1 ]]; then
-    if [[ -e "$LEGACY_BACKUP_DIR" || -L "$LEGACY_BACKUP_DIR" ]]; then
-        printf '[chezmoi] Refusing to replace %s: backup already exists at %s\n' \
-            "$MERGED_SKILLS_DIR" "$LEGACY_BACKUP_DIR" >&2
-        exit 1
-    fi
-    mv "$MERGED_SKILLS_DIR" "$LEGACY_BACKUP_DIR"
-    printf '[chezmoi] Preserved legacy skill tree at %s\n' "$LEGACY_BACKUP_DIR"
 fi
 
 mkdir -p "$MERGED_SKILLS_DIR" "$CLAUDE_SKILLS_DIR"
@@ -70,7 +58,12 @@ for root in "${SKILL_SOURCE_ROOTS[@]}"; do
         link="$MERGED_SKILLS_DIR/$name"
         desired="$relative_root/$name"
 
-        if [[ ! -e "$link" && ! -L "$link" ]]; then
+        if [[ -L "$link" ]]; then
+            continue
+        elif [[ -e "$link" ]]; then
+            printf '[chezmoi] WARNING: %s is a real directory and shadows %s/%s\n' \
+                "$link" "$root" "$name" >&2
+        else
             ln -s "$desired" "$link"
         fi
     done
@@ -81,7 +74,7 @@ done
 for link in "$CLAUDE_SKILLS_DIR"/*; do
     [[ -L "$link" ]] || continue
     name="$(basename "$link")"
-    if ! skill_exists "$name"; then
+    if ! merged_skill "$name"; then
         rm -f "$link"
         printf '[chezmoi] Removed stale Claude skill link: %s\n' "$name"
     fi

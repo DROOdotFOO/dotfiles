@@ -16,7 +16,7 @@ assert_file() {
 
 assert_file "$DOTFILES_ROOT/AGENTS.md"
 assert_file "$DOTFILES_ROOT/home/private_dot_codex/AGENTS.md.tmpl"
-assert_file "$DOTFILES_ROOT/home/private_dot_codex/hooks.json.tmpl"
+assert_file "$DOTFILES_ROOT/home/private_dot_codex/modify_hooks.json.tmpl"
 assert_file "$DOTFILES_ROOT/home/run_onchange_after_setup-codex.sh.tmpl"
 assert_file "$DOTFILES_ROOT/scripts/utils/apply-codex-target.sh"
 grep -A5 '^\[".agents/skills-upstream"\]' "$DOTFILES_ROOT/home/.chezmoiexternal.toml" |
@@ -48,10 +48,43 @@ HOME="$test_home" bash "$DOTFILES_ROOT/home/run_after_sync-skills.sh.tmpl" >/dev
 [[ "$(readlink "$test_home/.agents/skills/shared")" == ../skills-extra/shared ]] ||
     fail "skill merge is not idempotent"
 
+# A tool-installed real directory (npx impeccable install) must survive once the
+# legacy backup exists, and must not block the merge of everything else.
+mkdir -p "$test_home/.agents/skills/installed" "$test_home/.agents/skills-upstream/later"
+printf '%s\n' '# installed' >"$test_home/.agents/skills/installed/SKILL.md"
+printf '%s\n' '# later' >"$test_home/.agents/skills-upstream/later/SKILL.md"
+HOME="$test_home" bash "$DOTFILES_ROOT/home/run_after_sync-skills.sh.tmpl" >/dev/null ||
+    fail "skill merge refused a tool-installed skill directory"
+[[ -d "$test_home/.agents/skills/installed" && ! -L "$test_home/.agents/skills/installed" ]] ||
+    fail "tool-installed skill directory was replaced"
+[[ -L "$test_home/.agents/skills/later" ]] || fail "new upstream skill was not linked alongside installed dir"
+[[ -L "$test_home/.claude/skills/installed" ]] || fail "tool-installed skill was not exposed to Claude"
+sync_output="$(HOME="$test_home" bash "$DOTFILES_ROOT/home/run_after_sync-skills.sh.tmpl" 2>&1)"
+[[ "$sync_output" != *"Removed stale Claude skill link: installed"* ]] ||
+    fail "tool-installed skill link churns on every run"
+[[ -L "$test_home/.claude/skills/installed" ]] || fail "tool-installed skill lost its Claude link"
+
+# A real directory that shares a name with a source skill wins, but loudly.
+mkdir -p "$test_home/.agents/skills-upstream/installed"
+printf '%s\n' '# upstream copy' >"$test_home/.agents/skills-upstream/installed/SKILL.md"
+sync_output="$(HOME="$test_home" bash "$DOTFILES_ROOT/home/run_after_sync-skills.sh.tmpl" 2>&1)"
+[[ "$sync_output" == *"WARNING: $test_home/.agents/skills/installed is a real directory and shadows"* ]] ||
+    fail "shadowed upstream skill was not reported"
+[[ "$(cat "$test_home/.agents/skills/installed/SKILL.md")" == '# installed' ]] ||
+    fail "tool-installed skill was replaced by the upstream copy"
+
+hooks_script="$WORK_DIR/modify-hooks.sh"
 hooks_json="$WORK_DIR/hooks.json"
-chezmoi execute-template <"$DOTFILES_ROOT/home/private_dot_codex/hooks.json.tmpl" >"$hooks_json"
+chezmoi execute-template <"$DOTFILES_ROOT/home/private_dot_codex/modify_hooks.json.tmpl" >"$hooks_script"
+printf '' | sh "$hooks_script" >"$hooks_json"
 jq -e '.hooks.PreToolUse[0].matcher == "^Bash$"' "$hooks_json" >/dev/null
 jq -e '.hooks.SessionStart[0].matcher == "startup|resume"' "$hooks_json" >/dev/null
+printf '%s\n' '{"hooks":{"PreToolUse":[{"matcher":"stale"}],"PostToolUse":[{"matcher":"Edit","hooks":[]}]}}' |
+    sh "$hooks_script" >"$hooks_json"
+jq -e '.hooks.PreToolUse[0].matcher == "^Bash$"' "$hooks_json" >/dev/null ||
+    fail "hooks merge did not keep managed PreToolUse authoritative"
+jq -e '.hooks.PostToolUse[0].matcher == "Edit"' "$hooks_json" >/dev/null ||
+    fail "hooks merge dropped a tool-installed hook event"
 
 rendered_git="$WORK_DIR/gitconfig"
 chezmoi --source "$DOTFILES_ROOT/home" --working-tree "$DOTFILES_ROOT" \

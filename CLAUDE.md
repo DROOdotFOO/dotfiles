@@ -68,7 +68,7 @@ Use in templates: `{{- if .rust -}}...{{- end -}}`. Use `{{- -}}` to trim whites
 - `run_onchange_after_brew-bundle.sh.tmpl` -- runs `brew bundle install` when Brewfile hash changes
 - `run_onchange_after_mise-install.sh.tmpl` -- runs `mise install` when mise config changes
 - `run_onchange_after_reload-hammerspoon.sh.tmpl` -- reloads Hammerspoon on config change (macOS)
-- `run_after_sync-skills.sh.tmpl` -- merges upstream and vendored skills into `~/.agents/skills/`, then mirrors that inventory into `~/.claude/skills/`
+- `run_after_sync-skills.sh.tmpl` -- merges upstream and vendored skills into `~/.agents/skills/`, then mirrors that inventory into `~/.claude/skills/`; real directories a tool installed there (`npx impeccable install`) are left in place and mirrored too
 - `run_onchange_after_setup-codex.sh.tmpl` -- registers enabled MCP servers through the Codex CLI without replacing app-owned config
 
 For Codex-only rollout, use `make codex-diff` followed by `make codex-apply`.
@@ -85,6 +85,8 @@ Two constraints when writing one:
 - **Deletion stops propagating.** A merge only adds, so removing a key from the source no longer removes it from the target; delete it by hand.
 
 `home/private_dot_config/zed/modify_private_settings.json.tmpl` is the same recipe for Zed, which rewrites `settings.json` on every UI setting change. Note the attribute order in that filename: `modify_` precedes `private_`, and the target still lands at `0600`.
+
+`home/private_dot_codex/modify_hooks.json.tmpl` applies it to `~/.codex/hooks.json`: `PreToolUse` and (with `prepper`) `SessionStart` are managed, while hook events other tools add (`npx impeccable install` writes `PostToolUse` and `Stop`) survive. Codex still asks you to trust any hook it has not seen; chezmoi never answers that for you.
 
 `~/.gitconfig` needed a different answer. It is INI, so `jq` does not apply, and only two blocks ever drift -- `gh auth setup-git` rewrites the credential helpers through `git config`, which emits tab indentation and a trailing space after the empty `helper =`. Rather than add a `modify_` script, those blocks in `dot_gitconfig.tmpl` now match `git config` byte-for-byte, so gh's rewrite is a no-op. The trailing space is emitted with a `{{ "{{ \" \" }}" }}` template expression instead of typed, because the trailing-whitespace pre-commit hook strips real ones and would silently reintroduce the drift.
 
@@ -136,7 +138,7 @@ Note the prettier hook uses `types_or`, not `types` -- pre-commit ANDs `types`, 
 
 Single source of truth: `[data.theme]` in `chezmoi.toml` (Synthwave84 palette). Templates reference colors as `{{ .theme.bg }}`, `{{ .theme.accent }}`, etc. Applied to: fzf (`tools.zsh.tmpl`), Starship (`starship.toml.tmpl`), Hammerspoon alerts. Static theme files in `config/theme/synthwave84.toml` for tools that can't use chezmoi templates.
 
-**Two variants.** `[data.theme]` is the base palette (Ghostty, tmux, fzf, Starship, btop, yazi). `[data.theme.soft]` is the lower-contrast **Synthwave84 Soft** variant that Zed uses, and it is the only block carrying syntax roles (`keyword`, `string`, `function`, `type`, ...) plus diagnostic and git colors. Emacs consumes `{{ .theme.soft.* }}` for UI and syntax, but reuses the base `{{ .theme.* }}` ANSI keys for terminal faces -- Zed's Soft variant leaves `terminal.ansi.*` at base values, so shell buffers match Ghostty exactly.
+**Two variants.** `[data.theme]` is the base palette (Ghostty, tmux, fzf, Starship, btop, yazi). `[data.theme.soft]` is the lower-contrast **Synthwave84 Soft** variant that Zed uses in dark mode (`theme.mode = "system"` falls back to One Light in light mode), and it is the only block carrying syntax roles (`keyword`, `string`, `function`, `type`, ...) plus diagnostic and git colors. Emacs consumes `{{ .theme.soft.* }}` for UI and syntax, but reuses the base `{{ .theme.* }}` ANSI keys for terminal faces -- Zed's Soft variant leaves `terminal.ansi.*` at base values, so shell buffers match Ghostty exactly.
 
 Authoritative source for both is the shipped Zed theme JSON (`~/Library/Application Support/Zed/extensions/installed/synthwave84/themes/synthwave84.json`), not `config/theme/synthwave84.toml`, which had drifted on `keyword` and `type`.
 
@@ -241,7 +243,7 @@ Skills are portable `SKILL.md` files sourced from [DROOdotFOO/agent-skills](http
 
 **Skills roots:**
 
-- `~/.agents/skills/` -- symlink-only merged view consumed by all hosts.
+- `~/.agents/skills/` -- merged view consumed by all hosts: symlinks from the merger plus any real directory a tool installed directly (`impeccable`).
 - `~/.agents/skills-upstream/` -- read-only agent-skills archive external.
 - `~/.agents/skills-extra/` -- chezmoi-vendored third-party source root.
 - `~/.raxol/skills/` -- writable managed root for **agent-authored** skills only (the raxol curation loop writes here). Runtime state, left unmanaged by chezmoi. Human and vendored skills come from the chezmoi-managed externals above, never here.
